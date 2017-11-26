@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <title>DnDashboard</title>
+
+    <!-- Load CSS -->
+    <link rel="stylesheet" href="css/dndesktop.css">
+    
+    <!-- load js -->
+    <script src="js/dndesktop.js"></script>
+
+  </head>
+  <body>
+    <div>
+      <span id="playclock"></span>
+      <input id="commentbox" type="text" size="100"></input>
+    </div>
+    <table class="container">
+      </tr>
+        <td width="5%" class="pheading">DM</td>
+        <td width="35%"id='dmname'></td>
+        <td width="10%" id='dmkills'></td>
+        <td width="38%"id='dmteam'></td>
+        <td width="12%"><button class="btn" id="changedm">change</button></td>
+      </tr>
+    </table>
+
+    <div id="newDmPage">
+      <p>DM Name: <input type="text" id="newDmName"></input></p>
+      <div>
+        <input type="radio" name="dmteam" value="Duskpatrol" selected>Duskpatrol</input>
+        <input type="radio" name="dmteam" value="Moonwatch">Moonwatch</input>
+        <input type="radio" name="dmteam" value="Dawnguard">Dawnguard</input>
+      </div>
+      <div>
+        <button class="btn" id="changedm-close">Cancel</button>
+        <button class="btn" id="changedm-save">Ok</button>
+      </div>
+    </div>
+
+    <table id="playingtable" class="container"></table>
+    <!-- We are using node <script>document.write(process.versions.node)</script>,
+    Chrome <script>document.write(process.versions.chrome)</script>,
+    and Electron <script>document.write(process.versions.electron)</script>.
+    <button id="clicky" class="btn btn-primary">howdy</button> -->
+    <div id="resCharPage">
+      <input type="hidden" id="resCharId" value=''>
+      Paying here? <input id="resCharPaying" type="checkbox"><input id="resCharCost" type="text" disabled><br>
+      <input type="radio" id="resCharPay1" name="payform" value="cash" checked disabled>cash<br>
+      <input type="radio" id="resCharPay2" name="payform" value="online" disabled>online<br>
+      <button class="btn" id="reschar-close">Cancel</button>
+      <button class="btn" id="reschar-save">Ok</button>
+    </div>
+  </body>
+</html>

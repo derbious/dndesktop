@@ -1,0 +1,5 @@
+.DS_Store
+build/
+buildcache/
+tmp_mac/
+tmp_windows/
