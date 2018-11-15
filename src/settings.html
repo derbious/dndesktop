@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <title>Settings</title>
+
+    <!-- Load CSS -->
+    <link rel="stylesheet" href="css/pure-min.css">
+
+    <!-- load js -->
+    <script src="js/settings.js"></script>
+
+  </head>
+  <body>
+      <form class="pure-form pure-form-aligned" onsubmit="return false;">
+          <fieldset>
+              <div class="pure-control-group">
+                  <label for="dndurl">DnDonations url</label>
+                  <input id="dndurl" type="text" placeholder="url">
+              </div>
+              <div class="pure-control-group">
+                  <label for="username">Username</label>
+                  <input id="username" type="text" placeholder="username">
+              </div>
+              <div class="pure-control-group">
+                  <label for="password">Password</label>
+                  <input id="password" type="password" placeholder="Password">
+              </div>
+              <div class="pure-controls">
+                  <button id="submit-btn" type="submit" class="pure-button pure-button-primary">Save</button>
+                  <button id="cancel-btn" type="cancel" class="pure-button pure-button-primary">Cancel</button>
+              </div>
+          </fieldset>
+      </form>
+  </body>
+</html>

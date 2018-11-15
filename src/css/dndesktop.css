@@ -66,10 +66,22 @@ table {
 #resCharPage {
   display: none;
   position: absolute;
-  z-index: 2;
+  z-index: 3;
   left: 20%;
   top: 20%;
   border: 2px solid black;
   background-color: lightgray;
   width: 40%;
+}
+
+#greyedOut {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  left: 0px;
+  top: 0px;
+  background-color: black;
+  opacity: 0.5;
+  width: 100%;
+  height: 100%;
 }

@@ -1,7 +1,6 @@
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, Menu, dialog} = require('electron')
 const path = require('path')
 const url = require('url')
-
 
 // Keep a global reference of the window object, if you don't, the window will
 // // be closed automatically when the JavaScript object is garbage collected.
@@ -9,7 +8,7 @@ const url = require('url')
 //
 function createWindow () {
   // Create the browser window.
-  win = new BrowserWindow({width: 800, height: 600})
+  win = new BrowserWindow({width: 800, height: 650})
 
   // and load the index.html of the app.
   win.loadURL(url.format({
@@ -19,7 +18,36 @@ function createWindow () {
   }))
 
   // Open the DevTools.
-  win.webContents.openDevTools()
+  //win.webContents.openDevTools()
+
+  // Create the "Settings" menu
+  const template = [
+    {
+      label: app.getName(),
+      submenu: [
+        {role: 'about'},
+        {type: 'separator'},
+        {role: 'toggleDevTools'},
+        {
+          label: 'Settings',
+          click (item) {
+            // Setup the settings window
+            let settingswin = new BrowserWindow({ width: 490, height: 200, frame: false, resizable: false })
+            settingswin.loadURL(url.format({
+              pathname: path.join(__dirname, 'settings.html'),
+              protocol: 'file:',
+              slashes: true
+            }))
+            settingswin.show()
+          }
+        },
+        {type: 'separator'},
+        {role: 'quit'}
+      ]
+    }
+  ]
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
 
   // Emitted when the window is closed.
   win.on('closed', () => {
@@ -51,6 +79,3 @@ app.on('activate', () => {
     createWindow()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.

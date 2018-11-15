@@ -26,13 +26,40 @@
         <td width="12%"><button class="btn" id="changedm">change</button></td>
       </tr>
     </table>
+    
+    <table class="container">
+      </tr>
+        <td width="10%" id="perilLvl"></td>
+        <td width="15%">
+          Next Goal:
+          <select id="nextGoal">
+            <option>$750</option>
+            <option>$1000</option>
+            <option>$1250</option>
+            <option>$1500</option>
+            <option>$2000</option>
+            <option>$2500</option>
+            <option>$3000</option>
+            <option>$4000</option>
+            <option>$5000</option>
+            <option>$7500</option>
+            <option>$10000</option>
+          </select>
+        </td>
+        <td width="25%" id='duskpatrolKills'></td>
+        <td width="25%" id='moonwatchKills'></td>
+        <td width="25%" id='sunguardKills'></td>
+      </tr>
+    </table>
+
+    <div id="greyedOut"></div>
 
     <div id="newDmPage">
       <p>DM Name: <input type="text" id="newDmName"></input></p>
       <div>
         <input type="radio" name="dmteam" value="Duskpatrol" selected>Duskpatrol</input>
         <input type="radio" name="dmteam" value="Moonwatch">Moonwatch</input>
-        <input type="radio" name="dmteam" value="Dawnguard">Dawnguard</input>
+        <input type="radio" name="dmteam" value="Sunguard">Sunguard</input>
       </div>
       <div>
         <button class="btn" id="changedm-close">Cancel</button>
@@ -47,7 +74,7 @@
     <button id="clicky" class="btn btn-primary">howdy</button> -->
     <div id="resCharPage">
       <input type="hidden" id="resCharId" value=''>
-      Paying here? <input id="resCharPaying" type="checkbox"><input id="resCharCost" type="text" disabled><br>
+      Self Paying? <input id="resCharPaying" type="checkbox"><input id="resCharCost" type="text" disabled><br>
       <input type="radio" id="resCharPay1" name="payform" value="cash" checked disabled>cash<br>
       <input type="radio" id="resCharPay2" name="payform" value="online" disabled>online<br>
       <button class="btn" id="reschar-close">Cancel</button>

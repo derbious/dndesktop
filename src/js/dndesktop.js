@@ -8,9 +8,12 @@ const dmname_file = output_dir+'/dmname.txt';
 
 const playing_clock_start = new Date('2017-11-10T02:00:00Z'); //When DnDonations is starting
 
+var char_names = {};
+
 var dndapi_endpoint;
 
 var commentbox_write;
+var seats_locked = [false, false, false, false, false, false];
 
 function pad(n) {
   return (n < 10) ? ("0" + n) : n;
@@ -22,25 +25,21 @@ function tailPad(pad, str) {
 
 
 // Reads the url from the textfile, and stores it
-function setupApiEndpoint(){
+function readconfig(){
   var homedir = electron.remote.app.getPath("home");
-  dndapi_endpoint = fs.readFileSync(homedir+"/.dndesktopconfig.txt", "utf-8").replace(/\s/g,'');
-}
-//read password and get admin token
-function setupAdminToken(){
-  console.log(dndapi_endpoint);
-  //First, read the password from the file
-  homedir = electron.remote.app.getPath("home");
-  pass = fs.readFileSync(homedir+"/.dndesktoppass.txt", 'utf-8').replace(/\W/g, '');
-  // load the token
+  dndapi_config = JSON.parse(fs.readFileSync(homedir+"/.dndesktopconfig.json", "utf-8"));
+
+  // Set the global dndapi_endpoint
+  dndapi_endpoint = dndapi_config.dndurl;
+
   var authreq = new XMLHttpRequest();
   authreq.onreadystatechange = function() {
     if (authreq.readyState == XMLHttpRequest.DONE) {
       if (authreq.status == 200) {
         // Store the token in local storage
-        //console.log(xmlhttp.responseText);
         r = JSON.parse(authreq.responseText);
         sessionStorage.setItem('access_token', r['access_token']);
+        console.log('New token:', sessionStorage.getItem('access_token'));
         refreshPlayerList();
         refreshDmInfo();
         refreshGraveyard();
@@ -49,12 +48,14 @@ function setupAdminToken(){
       }
     }
   };
-
-  authreq.open("POST", "http://localhost:5000/auth");
+  authreq.open("POST", dndapi_endpoint+"/api/auth");
   authreq.setRequestHeader('Content-Type', 'application/json');
-  authreq.send('{"username": "admin", "password": "'+pass+'"}');
+  var j = {
+    "username": dndapi_config.username,
+    "password": dndapi_config.password
+  }
+  authreq.send(JSON.stringify(j));
 }
-
 
 // Update the playing clock
 function refreshPlayingClock() {
@@ -70,25 +71,36 @@ function refreshPlayingClock() {
 function killCharacter(char_id) {
   event.preventDefault();
   console.log('Killing character:', char_id);
-  var token = sessionStorage.getItem('access_token');
-  var killreq = new XMLHttpRequest();
-  killreq.onreadystatechange = function() {
-    if (killreq.readyState == XMLHttpRequest.DONE) {
-      if (killreq.status == 201) {
-        refreshDmInfo();
-        refreshPlayerList();
-        refreshGraveyard();
+  //Display are you sure dialog
+  confirmation = electron.remote.dialog.showMessageBox({
+    type: 'question',
+    buttons: ['Yes', 'Cancel'],
+    defaultId: 1,
+    message: 'Kill character "'+char_names[char_id]+'"?',
+    cancelId: 1
+  });
+  if(confirmation == 0){
+    var token = sessionStorage.getItem('access_token');
+    var killreq = new XMLHttpRequest();
+    killreq.onreadystatechange = function() {
+      if (killreq.readyState == XMLHttpRequest.DONE) {
+        if (killreq.status == 201) {
+          refreshDmInfo();
+          refreshPlayerList();
+          refreshGraveyard();
+        }
       }
     }
+    killreq.open("POST", dndapi_endpoint+"/api/characters/death/"+char_id);
+    killreq.setRequestHeader('Authorization', 'JWT '+token);
+    killreq.send();
+  }else{
+    console.log('character not killed');
   }
-  killreq.open("POST", "http://localhost:5000/characters/death/"+char_id);
-  killreq.setRequestHeader('Authorization', 'JWT '+token);
-  killreq.send();
 }
 
 //use token to update player list (playing)
 function refreshPlayerList() {
-  console.log('Refreshing player list.');
   var token = sessionStorage.getItem('access_token');
   var plreq = new XMLHttpRequest();
   plreq.onreadystatechange = function() {
@@ -98,8 +110,35 @@ function refreshPlayerList() {
         r = JSON.parse(plreq.responseText);
         nowDate = new Date();
         th = '';
+
+        console.log(r);
+        
+        // update char_names map.
+        char_names = {};
+        for(i=0; i<r['playing'].length; i++){
+          if(r['playing'][i] != null){
+            id = r['playing'][i]['id'];
+            name = r['playing'][i]['name']
+            char_names[id] = name;
+          }
+        }
+        for(i=0; i<r['waiting'].length; i++){
+          id = r['waiting'][i]['id'];
+          name = r['waiting'][i]['name']
+          char_names[id] = name;
+        }
+
+        // Render out the table
         for(i=0; i<6; i++){
-          th += '<tr><td width="5%"><p class="pheading">P'+(i+1)+'</p></td>';
+          th += '<tr><td width="5%"><p class="pheading">P'+(i+1)+'</p>';
+          if(i==0 || i==1 || i==5){
+            th += '<input type="checkbox" id="lock-'+(i+1)+'"';
+            if(seats_locked[i]){
+              th += ' checked';
+            }
+            th += '>';
+          }
+          th += '</td>';
           if(r['playing'][i] != null){
             th += '<td width="10%">'+r['playing'][i]['name']+'</td>';
             th += '<td width="20%">'+r['playing'][i]['race']+'</td>';
@@ -118,6 +157,7 @@ function refreshPlayerList() {
             var timeoutput = timer;
           }else{
             // display add player dropdown
+            var nameoutput = '';
             th += '<td width="95%" colspan="6"><form><select id="entry-'+(i+1)+'">';
             for(j=0; j<r['waiting'].length; j++){
               th += '<option value="'+r['waiting'][j]['id']+'">';
@@ -125,8 +165,15 @@ function refreshPlayerList() {
             }
             th += '</select>';
             th += '<button class="btn" id="add-'+(i+1)+'"';
-            th += ' class="btn">Add</button></form></td>';
-            var nameoutput = '';
+            th += ' class="btn"';
+            if(i==0 || i==1 || i==5){
+              var box = document.getElementById('lock-'+(i+1));
+              if(box && box.checked){
+                nameoutput = 'LOCKED';
+                th += ' disabled';
+              }
+            }
+            th += '>Add</button></form></td>';
             var classoutput = '';
             var timeoutput = '--:--';
           }
@@ -142,13 +189,42 @@ function refreshPlayerList() {
             document.getElementById("add-"+(i+1)).addEventListener('click', mkAddClickListener(i+1));
           }
         }
+        // Add event listeners to locked rows
+        document.getElementById("lock-1").addEventListener('change', mkLockSeatListener(1));
+        document.getElementById("lock-2").addEventListener('change', mkLockSeatListener(2));
+        document.getElementById("lock-6").addEventListener('change', mkLockSeatListener(6));
+        // Update the perilLevel
+        var peril = 0;
+        switch(r['waiting'].length){
+          case 0:
+          case 1:
+            peril = 1;
+            break;
+          case 2:
+            peril = 2;
+            break;
+          case 3:
+            peril = 3;
+            break;
+          case 4:
+            peril = 4;
+            break;
+          default:
+            peril = 5;
+        }
+        document.getElementById('perilLvl').innerHTML = "Peril: "+peril;
+        fs.writeFileSync(output_dir+'/perillvl.txt', peril);
+
+        // Render out the next donation goal.
+        var nextgoal = document.getElementById('nextGoal').value;
+        fs.writeFileSync(output_dir+'/nextgoal.txt', nextgoal);
       } else {
         console.log(plreq);
       }
     }
   };
 
-  plreq.open("GET", "http://localhost:5000/queue/");
+  plreq.open("GET", dndapi_endpoint+"/api/queue/");
   plreq.setRequestHeader('Content-Type', 'application/json');
   plreq.setRequestHeader('Authorization', 'JWT '+token);
   plreq.send();
@@ -162,47 +238,71 @@ function refreshGraveyard() {
       if (gyreq.status == 200) {
         // parse the response
         r = JSON.parse(gyreq.responseText);
-        var padding = Array(20).join(' ');
+        var padding = Array(12).join(' ');
         output_txt = ''
         for(i=0; i<r.length; i++) {
-          output_txt += tailPad(padding, r[i]['player']);
+          var playercol = r[i]['player']
+          if(r[i]['player'].length > 10){
+            playercol = r[i]['player'].substring(0,10);
+          }
+          output_txt += tailPad(padding, playercol);
           output_txt += tailPad(padding, r[i]['name']);
           var hours = Math.floor(r[i]['seconds_alive'] / 3600);
           var mins = Math.floor((r[i]['seconds_alive'] % 3600) / 60);
           output_txt += pad(hours)+':'+pad(mins);
           output_txt += '\n';
         }
+        output_txt += Array(15).join('\n');
         fs.writeFileSync(output_dir+'/graveyard.txt', output_txt);
       }
     }
   }
   
-  gyreq.open("GET", "http://localhost:5000/characters/graveyard/");
+  gyreq.open("GET", dndapi_endpoint+"/api/characters/graveyard/");
   gyreq.setRequestHeader('Content-Type', 'application/json');
   gyreq.setRequestHeader('Authorization', 'JWT '+token);
   gyreq.send();
 }
 
+function mkLockSeatListener(row){
+  return function(e){
+    e.preventDefault();
+    seats_locked[row-1] = document.getElementById('lock-'+row).checked;
+    refreshPlayerList();
+  };
+}
+
 function mkAddClickListener(row){
   return function(e){
     e.preventDefault();
+    
     //console.log('Clicked add-', row);
-    var charid = document.getElementById('entry-'+row).value; 
-    // make a json call to start the char playing
-    var token = sessionStorage.getItem('access_token');
-    var spreq = new XMLHttpRequest();
-    spreq.onreadystatechange = function() {
-      if (spreq.readyState == XMLHttpRequest.DONE) {
-        if (spreq.status == 201) {
-          refreshPlayerList();
+    var charid = document.getElementById('entry-'+row).value;
+    // have the operator confirm addition
+    confirmation = electron.remote.dialog.showMessageBox({
+      type: 'question',
+      buttons: ['Yes', 'Cancel'],
+      defaultId: 1,
+      message: 'Add character "'+char_names[charid]+'" to seat '+row+'?',
+      cancelId: 1
+    });
+    if(confirmation == 0){
+      // make a json call to start the char playing
+      var token = sessionStorage.getItem('access_token');
+      var spreq = new XMLHttpRequest();
+      spreq.onreadystatechange = function() {
+        if (spreq.readyState == XMLHttpRequest.DONE) {
+          if (spreq.status == 201) {
+            refreshPlayerList();
+          }
         }
-      }
-    };
-    data = '{"seat_num": '+row+'}'
-    spreq.open("POST", "http://localhost:5000/characters/startplay/"+charid);
-    spreq.setRequestHeader('Content-Type', 'application/json');
-    spreq.setRequestHeader('Authorization', 'JWT '+token);
-    spreq.send(data);
+      };
+      data = '{"seat_num": '+row+'}'
+      spreq.open("POST", dndapi_endpoint+"/api/characters/startplay/"+charid);
+      spreq.setRequestHeader('Content-Type', 'application/json');
+      spreq.setRequestHeader('Authorization', 'JWT '+token);
+      spreq.send(data);
+    }
   }
 }
 
@@ -221,6 +321,7 @@ function showResPage(id, num_resses) {
   //set the id and amount in the page.
   document.getElementById('resCharId').value = id;
   document.getElementById('resCharCost').value = 5 * Math.pow(2,num_resses);
+  document.getElementById('greyedOut').style.display = 'block';
   document.getElementById('resCharPage').style.display = 'block';
 }
 
@@ -236,6 +337,7 @@ function submitRes(event) {
     if (resreq.readyState == XMLHttpRequest.DONE) {
       if (resreq.status == 201) {
         document.getElementById('resCharPage').style.display = 'none';
+        document.getElementById('greyedOut').style.display = 'none';
         refreshPlayerList();
         refreshDmInfo();
       }
@@ -248,7 +350,7 @@ function submitRes(event) {
   if(document.getElementById('resCharPaying').checked){
     data = '{"donation": {"amt": '+amt+', "method": "'+payment+'"}}'
   }
-  resreq.open("POST", "http://localhost:5000/characters/res/"+charid);
+  resreq.open("POST", dndapi_endpoint+"/api/characters/res/"+charid);
   resreq.setRequestHeader('Content-Type', 'application/json');
   resreq.setRequestHeader('Authorization', 'JWT '+token);
   resreq.send(data);
@@ -269,7 +371,7 @@ function changeDm(){
     }
   };
   data = '{"name": "'+dm_name+'", "team": "'+dm_team+'"}'
-  dmreq.open("POST", "http://localhost:5000/dms/");
+  dmreq.open("POST", dndapi_endpoint+"/api/dms/");
   dmreq.setRequestHeader('Content-Type', 'application/json');
   dmreq.setRequestHeader('Authorization', 'JWT '+token);
   dmreq.send(data);
@@ -294,22 +396,45 @@ function refreshDmInfo(){
       }
     }
   }
-  dmreq.open("GET", "http://localhost:5000/currentdm/");
+  dmreq.open("GET", dndapi_endpoint+"/api/currentdm/");
   //dmreq.setRequestHeader('Content-Type', 'application/json');
   dmreq.setRequestHeader('Authorization', 'JWT '+token);
   dmreq.send();
 
+
+  // Also pull the dm team kills
+  var teamreq = new XMLHttpRequest();
+  teamreq.onreadystatechange = function() {
+    if (teamreq.readyState == XMLHttpRequest.DONE) {
+      if (teamreq.status == 200) {
+        // parse the response
+        r = JSON.parse(teamreq.responseText);
+        document.getElementById('duskpatrolKills').innerHTML = "Duskpatrol kills: "+r['duskpatrol'];
+        document.getElementById('moonwatchKills').innerHTML = "Moonwatch kills: "+r['moonwatch'];
+        document.getElementById('sunguardKills').innerHTML = "Sunguard kills: "+r['sunguard'];
+        
+        // write dm info out to files
+        fs.writeFileSync(output_dir+'/killsduskpatrol.txt', r['duskpatrol']);
+        fs.writeFileSync(output_dir+'/killsmoonwatch.txt', r['moonwatch']);
+        fs.writeFileSync(output_dir+'/killssunguard.txt', r['sunguard']);
+        fs.writeFileSync(output_dir+'/killstotal.txt', r['duskpatrol']+r['moonwatch']+r['sunguard']);
+      }
+    }
+  }
+  teamreq.open("GET", dndapi_endpoint+"/api/dmteamkills/");
+  teamreq.setRequestHeader('Authorization', 'JWT '+token);
+  teamreq.send();
 }
 
 
 document.addEventListener("DOMContentLoaded", function(event) {
-  setupApiEndpoint();
-  setupAdminToken();
+  readconfig();
   document.getElementById('commentbox').addEventListener('input', updateStatusBar);
   setInterval(refreshPlayerList, 30000);
   refreshPlayingClock();
   setInterval(refreshPlayingClock, 60000);
-
+  // get a new admin token every hour
+  setInterval(readconfig, 3600000);
 
   // Show the new DM screen
   document.getElementById('changedm').addEventListener('click', function() {
@@ -323,6 +448,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   // reschar
   document.getElementById('reschar-close').addEventListener('click', function(){
     document.getElementById('resCharPage').style.display = 'none';
+    document.getElementById('greyedOut').style.display = 'none';
   });
   document.getElementById('resCharPaying').addEventListener('change', function(event){
     if(document.getElementById('resCharPaying').checked){
