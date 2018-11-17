@@ -127,53 +127,53 @@ function refreshPlayerList() {
           name = r['waiting'][i]['name']
           char_names[id] = name;
         }
-
+        // Render table heading
+        th += '<thead><tr><th>Seat</th><th>Name</th><th>Race</th><th>Class</th><th>Resses</th><th>Timer</th><th></th></tr></thead>';
         // Render out the table
         for(i=0; i<6; i++){
-          th += '<tr><td width="5%"><p class="pheading">P'+(i+1)+'</p>';
-          if(i==0 || i==1 || i==5){
-            th += '<input type="checkbox" id="lock-'+(i+1)+'"';
-            if(seats_locked[i]){
-              th += ' checked';
-            }
-            th += '>';
-          }
-          th += '</td>';
+          th += '<tr>';
+          th += '<td width="6%"><p>P'+(i+1)+'</p></td>';
+          
+          //if(seats_locked[i]){
           if(r['playing'][i] != null){
             th += '<td width="10%">'+r['playing'][i]['name']+'</td>';
-            th += '<td width="20%">'+r['playing'][i]['race']+'</td>';
-            th += '<td width="30%">'+r['playing'][i]['class']+'</td>';
+            th += '<td width="15%">'+r['playing'][i]['race']+'</td>';
+            th += '<td width="19%">'+r['playing'][i]['class']+'</td>';
             th += '<td width="5%">'+r['playing'][i]['num_resses']+'</td>';
             var startDate = new Date(r['playing'][i]['starttime']);
             var diffMs = nowDate - startDate;
             var diffHrs = Math.floor((diffMs % 86400000) / 3600000); // hours
             var diffMins = Math.floor(((diffMs % 86400000) % 3600000) / 60000); // minutes
             var timer = pad(diffHrs)+':'+pad(diffMins);
-            th += '<td width="18">'+timer+'</td>';
-            th += '<td width="12"><button class="btn" onclick="showResPage('+r['playing'][i]['id']+','+r['playing'][i]['num_resses']+');">res</button>';
-            th += '<button class="btn" onclick="killCharacter('+r['playing'][i]['id']+');">kill</button></td>';
+            th += '<td width="15">'+timer+'</td>';
+            th += '<td width="24">';
+            th += '<div class="pure-button-group" role="group">';
+            th += '<button class="pure-button" onclick="showResPage('+r['playing'][i]['id']+','+r['playing'][i]['num_resses']+');">res</button>';
+            th += '<button class="pure-button" onclick="killCharacter('+r['playing'][i]['id']+');">kill</button></td>';
+            th += '</div>';
             var nameoutput = r['playing'][i]['name'];
             var classoutput = r['playing'][i]['class'];
             var timeoutput = timer;
           }else{
             // display add player dropdown
             var nameoutput = '';
-            th += '<td width="95%" colspan="6"><form><select id="entry-'+(i+1)+'">';
+            th += '<td width="95%" colspan="6"><form class="pure-form">';
+            th += '<fieldset><select style="width: 200px;" id="entry-'+(i+1)+'">';
             for(j=0; j<r['waiting'].length; j++){
               th += '<option value="'+r['waiting'][j]['id']+'">';
               th += (j+1)+") "+r['waiting'][j]['name']+'</option>';
             }
-            th += '</select>';
-            th += '<button class="btn" id="add-'+(i+1)+'"';
-            th += ' class="btn"';
-            if(i==0 || i==1 || i==5){
-              var box = document.getElementById('lock-'+(i+1));
-              if(box && box.checked){
-                nameoutput = 'LOCKED';
-                th += ' disabled';
-              }
-            }
-            th += '>Add</button></form></td>';
+            th += '</select> ';
+            th += '<button class="pure-button pure-button-primary" ';
+            th += 'id="add-'+(i+1)+'"';
+            th += '>Add</button></fieldset></form></td>';
+            // if(i==0 || i==1 || i==5){
+            //   var box = document.getElementById('lock-'+(i+1));
+            //   if(box && box.checked){
+            //     nameoutput = 'LOCKED';
+            //     th += ' disabled';
+            //   }
+            // }
             var classoutput = '';
             var timeoutput = '--:--';
           }
@@ -190,9 +190,9 @@ function refreshPlayerList() {
           }
         }
         // Add event listeners to locked rows
-        document.getElementById("lock-1").addEventListener('change', mkLockSeatListener(1));
-        document.getElementById("lock-2").addEventListener('change', mkLockSeatListener(2));
-        document.getElementById("lock-6").addEventListener('change', mkLockSeatListener(6));
+        // document.getElementById("lock-1").addEventListener('change', mkLockSeatListener(1));
+        // document.getElementById("lock-2").addEventListener('change', mkLockSeatListener(2));
+        // document.getElementById("lock-6").addEventListener('change', mkLockSeatListener(6));
         // Update the perilLevel
         var peril = 0;
         switch(r['waiting'].length){
@@ -212,7 +212,7 @@ function refreshPlayerList() {
           default:
             peril = 5;
         }
-        document.getElementById('perilLvl').innerHTML = "Peril: "+peril;
+        document.getElementById('perilLvl').innerHTML = peril.toString();
         fs.writeFileSync(output_dir+'/perillvl.txt', peril);
 
         // Render out the next donation goal.
@@ -320,9 +320,9 @@ function updateStatusBar(event) {
 function showResPage(id, num_resses) {
   //set the id and amount in the page.
   document.getElementById('resCharId').value = id;
-  document.getElementById('resCharCost').value = 5 * Math.pow(2,num_resses);
-  document.getElementById('greyedOut').style.display = 'block';
-  document.getElementById('resCharPage').style.display = 'block';
+  document.getElementById('resCharCost').innerHTML = 5 * (Math.pow(2,num_resses));
+  document.getElementById('resCharPage').style.opacity = '1';
+  document.getElementById('resCharPage').style.pointerEvents = 'auto';
 }
 
 // submit res
@@ -336,16 +336,16 @@ function submitRes(event) {
   resreq.onreadystatechange = function() {
     if (resreq.readyState == XMLHttpRequest.DONE) {
       if (resreq.status == 201) {
-        document.getElementById('resCharPage').style.display = 'none';
-        document.getElementById('greyedOut').style.display = 'none';
+        document.getElementById('resCharPage').style.pointerEvents = 'none';
+        document.getElementById('resCharPage').style.opacity = '0';
         refreshPlayerList();
         refreshDmInfo();
       }
     }
   };
 
-  var amt = document.getElementById('resCharCost').value;
-  var payment = document.querySelector('input[name="payform"]:checked').value;
+  var amt = document.getElementById('resCharCost').innerHTML;
+  var payment = document.getElementById('resPayForm').value;
   var data = '{"donation": null}'
   if(document.getElementById('resCharPaying').checked){
     data = '{"donation": {"amt": '+amt+', "method": "'+payment+'"}}'
@@ -359,14 +359,15 @@ function submitRes(event) {
 function changeDm(){
   //called to change the DM name
   var dm_name = document.getElementById('newDmName').value;
-  var dm_team = document.querySelector('input[name="dmteam"]:checked').value;
+  var dm_team = document.getElementById('newDmTeam').value;
   var token = sessionStorage.getItem('access_token');
   var dmreq = new XMLHttpRequest();
   dmreq.onreadystatechange = function() {
     if (dmreq.readyState == XMLHttpRequest.DONE) {
       if (dmreq.status == 201) {
         refreshDmInfo();
-        document.getElementById('newDmPage').style.display = 'none';
+        document.getElementById('newDmPage').style.opacity = '0';
+        document.getElementById('newDmPage').style.pointerEvents = 'none';
       }
     }
   };
@@ -409,9 +410,9 @@ function refreshDmInfo(){
       if (teamreq.status == 200) {
         // parse the response
         r = JSON.parse(teamreq.responseText);
-        document.getElementById('duskpatrolKills').innerHTML = "Duskpatrol kills: "+r['duskpatrol'];
-        document.getElementById('moonwatchKills').innerHTML = "Moonwatch kills: "+r['moonwatch'];
-        document.getElementById('sunguardKills').innerHTML = "Sunguard kills: "+r['sunguard'];
+        document.getElementById('duskpatrolKills').innerHTML = r['duskpatrol'];
+        document.getElementById('moonwatchKills').innerHTML = r['moonwatch'];
+        document.getElementById('sunguardKills').innerHTML = r['sunguard'];
         
         // write dm info out to files
         fs.writeFileSync(output_dir+'/killsduskpatrol.txt', r['duskpatrol']);
@@ -438,25 +439,25 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
   // Show the new DM screen
   document.getElementById('changedm').addEventListener('click', function() {
-    document.getElementById('newDmPage').style.display = 'block';
+    document.getElementById('newDmPage').style.opacity = '1';
+    document.getElementById('newDmPage').style.pointerEvents = 'auto';
   });
   document.getElementById('changedm-close').addEventListener('click', function() {
-    document.getElementById('newDmPage').style.display = 'none';
+    document.getElementById('newDmPage').style.pointerEvents = 'none';
+    document.getElementById('newDmPage').style.opacity = '0';
   });
   document.getElementById('changedm-save').addEventListener('click', changeDm);
 
   // reschar
   document.getElementById('reschar-close').addEventListener('click', function(){
-    document.getElementById('resCharPage').style.display = 'none';
-    document.getElementById('greyedOut').style.display = 'none';
+    document.getElementById('resCharPage').style.pointerEvents = 'none';
+    document.getElementById('resCharPage').style.opacity = '0';
   });
   document.getElementById('resCharPaying').addEventListener('change', function(event){
     if(document.getElementById('resCharPaying').checked){
-      document.getElementById('resCharPay1').removeAttribute('disabled');
-      document.getElementById('resCharPay2').removeAttribute('disabled');
+      document.getElementById('resPayForm').removeAttribute('disabled');
     } else {
-      document.getElementById('resCharPay1').setAttribute('disabled', 'disabled');
-      document.getElementById('resCharPay2').setAttribute('disabled', 'disabled');
+      document.getElementById('resPayForm').setAttribute('disabled', 'disabled');
     }
   });
   document.getElementById('reschar-save').addEventListener('click', submitRes);

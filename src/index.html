@@ -6,6 +6,7 @@
     <title>DnDashboard</title>
 
     <!-- Load CSS -->
+    <link rel="stylesheet" href="css/pure-min.css">
     <link rel="stylesheet" href="css/dndesktop.css">
     
     <!-- load js -->
@@ -13,72 +14,147 @@
 
   </head>
   <body>
-    <div>
-      <span id="playclock"></span>
-      <input id="commentbox" type="text" size="100"></input>
+    <div class="pure-g">
+        <div class="pure-u-1-24"></div>
+        <div class="pure-u-2-24"><p id="playclock" style="vertical-align: middle; font-size:150%"></p></div>
+        <div class="pure-u-20-24" style="padding: 20px 0;">
+            <form class="pure-form">
+                <input id="commentbox" type="text" size="70" style="width:100%"></input>
+            </form>
+        </div>
+        <div class="pure-u-1-24"></div>
     </div>
-    <table class="container">
-      </tr>
-        <td width="5%" class="pheading">DM</td>
-        <td width="35%"id='dmname'></td>
-        <td width="10%" id='dmkills'></td>
-        <td width="38%"id='dmteam'></td>
-        <td width="12%"><button class="btn" id="changedm">change</button></td>
-      </tr>
-    </table>
+    <div class="pure-g" style="margin-bottom: 8px;">
+      <div class="pure-u-1-24"></div>
+      <div class="pure-u-22-24">
+        <table class="pure-table" style="width:100%">
+          <thead>
+              <tr>
+                  <th>GM</th>
+                  <th>Kills</th>
+                  <th>Team</th>
+                  <th></th>
+              </tr>
+          </thead>
+          <tbody>
+              <tr>
+                  <td id="dmname"></td>
+                  <td id="dmkills"></td>
+                  <td id="dmteam"></td>
+                  <td><button class="pure-button button-large" id="changedm">change</button></td>
+              </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pure-u-1-24"></div>
+    </div>
+    <div class="pure-g" style="margin-bottom: 8px;">
+        <div class="pure-u-1-24"></div>
+        <div class="pure-u-22-24">
+            <table class="pure-table" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Peril</th>
+                        <th>Next Goal</th>
+                        <th>Duskpatrol Kills</th>
+                        <th>Moonwatch Kills</th>
+                        <th>Sunguard Kills</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="perilLvl"></td>
+                        <td>
+                          <select id="nextGoal">
+                            <option>$750</option>
+                            <option>$1000</option>
+                            <option>$1250</option>
+                            <option>$1500</option>
+                            <option>$2000</option>
+                            <option>$2500</option>
+                            <option>$3000</option>
+                            <option>$4000</option>
+                            <option>$5000</option>
+                            <option>$7500</option>
+                            <option>$10000</option>
+                          </select>
+                        </td>
+                        <td width="25%" id='duskpatrolKills'></td>
+                        <td width="25%" id='moonwatchKills'></td>
+                        <td width="25%" id='sunguardKills'></td>
+                    </tr>
+                </tbody>
+              </table>
+        </div>
+        <div class="pure-u-1-24"></div>
+    </div>
+
+    <div class="pure-g" style="margin-bottom: 8px;">
+      <div class="pure-u-1-24"></div>
+      <div class="pure-u-22-24">
+        <table id="playingtable" class="pure-table pure-table-horizontal" style="width:100%"></table>
+      </div>
+      <div class="pure-u-1-24"></div>
+    </div>
     
-    <table class="container">
-      </tr>
-        <td width="10%" id="perilLvl"></td>
-        <td width="15%">
-          Next Goal:
-          <select id="nextGoal">
-            <option>$750</option>
-            <option>$1000</option>
-            <option>$1250</option>
-            <option>$1500</option>
-            <option>$2000</option>
-            <option>$2500</option>
-            <option>$3000</option>
-            <option>$4000</option>
-            <option>$5000</option>
-            <option>$7500</option>
-            <option>$10000</option>
-          </select>
-        </td>
-        <td width="25%" id='duskpatrolKills'></td>
-        <td width="25%" id='moonwatchKills'></td>
-        <td width="25%" id='sunguardKills'></td>
-      </tr>
-    </table>
 
-    <div id="greyedOut"></div>
-
-    <div id="newDmPage">
-      <p>DM Name: <input type="text" id="newDmName"></input></p>
+    <!--
+         TODO: Implement this
+         Res Cost: 30
+         Prepaid? [] 
+         O Cash, O online <hidden if prepaid>
+         Cancel | Submit
+    -->
+    <div id="resCharPage" class="modal-dialog">
       <div>
-        <input type="radio" name="dmteam" value="Duskpatrol" selected>Duskpatrol</input>
-        <input type="radio" name="dmteam" value="Moonwatch">Moonwatch</input>
-        <input type="radio" name="dmteam" value="Sunguard">Sunguard</input>
-      </div>
-      <div>
-        <button class="btn" id="changedm-close">Cancel</button>
-        <button class="btn" id="changedm-save">Ok</button>
+        <form class="pure-form" onsubmit="return false;">
+          <fieldset>
+            <input type="hidden" id="resCharId" value=''>
+            <input id="resCharPaying" type="checkbox">
+            <label for="resCharPaying">Paying for self?</label>
+            <span id="resCharCost" class="pure-form-message-inline">5</span>
+            <select id="resPayForm" disabled>
+              <option value="cash">Cash</option>
+              <option value="online">Online</option>
+            </select>
+            <button type="cancel" class="pure-button" id="reschar-close">Cancel</button>
+            <button type="submit" class="pure-button pure-button-primary" id="reschar-save">Ok</button>
+          </fieldset>
+        </form>
       </div>
     </div>
 
-    <table id="playingtable" class="container"></table>
-    <!-- We are using node <script>document.write(process.versions.node)</script>,
-    Chrome <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
-    <button id="clicky" class="btn btn-primary">howdy</button> -->
-    <div id="resCharPage">
-      <input type="hidden" id="resCharId" value=''>
-      Self Paying? <input id="resCharPaying" type="checkbox"><input id="resCharCost" type="text" disabled><br>
-      <input type="radio" id="resCharPay1" name="payform" value="cash" checked disabled>cash<br>
-      <input type="radio" id="resCharPay2" name="payform" value="online" disabled>online<br>
-      <button class="btn" id="reschar-close">Cancel</button>
-      <button class="btn" id="reschar-save">Ok</button>
+    <div id="newDmPage" class="modal-dialog">
+      <div>
+        <form class="pure-form pure-form-stacked" onsubmit="return false;">
+          <fieldset>
+            <div class="pure-g">
+              <div class="pure-u-1-2">
+                  <label for="newDmName">DM Name</label>
+                  <input id="newDmName" type="text" placeholder="name">
+              </div>
+              <div class="pure-u-1-2">
+                  <label for="newDmTeam">Team</label>
+                  <select id="newDmTeam" class="pure-input-1">
+                    <option value="Duskpatrol">Duskpatrol 🌇</option>
+                    <option value="Moonwatch">Moonwatch 🌙</option>
+                    <option value="Sunguard">Sunguard ☀️</option>
+                </select>
+              </div>
+            </div>
+            <div class="pure-g" style="padding: 5px 0">
+              <div class="pure-u-1-4"></div>
+              <div class="pure-u-1-4">
+                <button type="cancel" class="pure-button pure-u-23-24" id="changedm-close">Cancel</button>
+              </div>
+              <div class="pure-u-1-4">
+                <button type="submit" class="pure-button pure-button-primary pure-u-23-24" id="changedm-save">Ok</button>
+              </div>
+              <div class="pure-u-1-4"></div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
     </div>
   </body>
 </html>

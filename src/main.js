@@ -8,7 +8,7 @@ const url = require('url')
 //
 function createWindow () {
   // Create the browser window.
-  win = new BrowserWindow({width: 800, height: 650})
+  win = new BrowserWindow({width: 800, height: 750, resizable: true})
 
   // and load the index.html of the app.
   win.loadURL(url.format({
@@ -16,9 +16,6 @@ function createWindow () {
     protocol: 'file:',
     slashes: true
   }))
-
-  // Open the DevTools.
-  //win.webContents.openDevTools()
 
   // Create the "Settings" menu
   const template = [

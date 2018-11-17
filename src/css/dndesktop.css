@@ -1,87 +1,22 @@
 /* dndesktop.css */
-body {
-  font-size: 16px;
-  padding: 3px;
+.modal-dialog {
+  position: fixed;
+  font-family: Arial, Helvetica, sans-serif;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 20;
+  opacity:0;
+  transition: opacity 350ms ease-in;
+  pointer-events: none;
 }
-table {
-  width: 100%;
-  margin: 10px;
-}
-
-.container, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-  padding: 2px;
-}
-
-.pheading {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.btn {
-  background-color: #b8b8b8;
-  -moz-border-radius: 4px;
-  -webkit-border-radius: 4px;
-  border-radius: 4px;
-  border: 1px solid #000000;
-  display: inline-block;
-  cursor: pointer;
-  color: #3d3d3d;
-  font-family: Arial;
-  font-size: 17px;
-  padding: 3px 20px;
-  text-decoration: none;
-}
-.btn:hover {
-  background-color: #999999;
-}
-.btn:active {
-  position: relative;
-  top: 1px;
-}
-
-#commentbox {
-  width: 84%;
-  padding: 10px;
-  font-size: 14px;
-  display: inline;
-  vertical-align: top;
-}
-
-#playclock {
-  width: 12%;
-  font-size: 30px;
-  font-weight: bold;
-  display: inline-block;
-}
-
-#newDmPage {
-  display: none;
-  border: 1px solid black;
-  background-color: lightgray;
-  width: 40%;
-}
-
-#resCharPage {
-  display: none;
-  position: absolute;
-  z-index: 3;
-  left: 20%;
-  top: 20%;
-  border: 2px solid black;
-  background-color: lightgray;
-  width: 40%;
-}
-
-#greyedOut {
-  display: none;
-  position: absolute;
-  z-index: 2;
-  left: 0px;
-  top: 0px;
-  background-color: black;
-  opacity: 0.5;
-  width: 100%;
-  height: 100%;
+.modal-dialog > div {
+	width: 400px;
+	position: relative;
+	margin: 10% auto;
+	padding: 5px 20px 13px 20px;
+	border-radius: 10px;
+	background: #fff;
 }
